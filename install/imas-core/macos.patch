@@ -1,0 +1,28 @@
+vaft-matlab: macOS fix for IMAS-Core's al_env.sh
+================================================
+
+Applied by install/install_imas_matlab.sh to a *copy* of the IMAS-Core
+tree on macOS only. The installed bin/al_env.sh is generated from
+IMAS-Core's common/al_env.sh.in, which reads the Data Dictionary version
+with `grep -P`. BSD grep has no -P, so IMAS_VERSION ends up empty on
+macOS. This one-line change reads it with sed instead.
+
+Tested on IMAS-Core 1c58af48 (5.6.0-1); applies to develop fd7ef3d7 and
+main ad0f2e29.
+
+License: this file is a modification of IMAS-Core and is distributed under
+the GNU Lesser General Public License v3.0, like IMAS-Core itself
+(https://github.com/iterorganization/IMAS-Core). It is not covered by
+vaft-matlab's Apache-2.0 license.
+
+diff --git a/common/al_env.sh.in b/common/al_env.sh.in
+index 1d363128..9fea742b 100644
+--- a/common/al_env.sh.in
++++ b/common/al_env.sh.in
+@@ -17,5 +17,5 @@ if [ -d "${CMAKE_INSTALL_PREFIX}/models/mdsplus" ]; then
+ fi
+ if [ -f "${CMAKE_INSTALL_PREFIX}/include/IDSDef.xml" ]; then
+     export IDSDEF_PATH="${CMAKE_INSTALL_PREFIX}/include/IDSDef.xml"
+-    export IMAS_VERSION="$( grep -Pom 1 '(?<=<version>)[^<]*' $IDSDEF_PATH )"
++    export IMAS_VERSION="$(sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' "$IDSDEF_PATH" | head -n 1)"
+ fi

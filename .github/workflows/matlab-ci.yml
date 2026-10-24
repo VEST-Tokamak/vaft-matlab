@@ -9,7 +9,7 @@ on:
       integration:
         description: Run IMAS integration tests on the self-hosted runner
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
@@ -44,17 +44,25 @@ jobs:
 
   integration:
     name: IMAS integration tests
-    # Needs a self-hosted runner with a MATLAB license and IMAS-MATLAB,
-    # whose environment already sources <install_dir>/bin/al_env.sh.
-    if: vars.IMAS_RUNNER == 'true' || (github.event_name == 'workflow_dispatch' && inputs.integration)
+    # Self-hosted runner with a licensed MATLAB and an IMAS-MATLAB install
+    # made by install/install_imas_matlab.sh. Never runs for pull requests:
+    # this is a public repository and the runner is a real machine.
+    # By default it runs only on manual dispatch (the runner is started on
+    # demand). Set the repository variable IMAS_RUNNER=true once a runner
+    # is permanently online to also run it on every push to main.
+    if: >-
+      github.event_name != 'pull_request' &&
+      (vars.IMAS_RUNNER == 'true' ||
+       (github.event_name == 'workflow_dispatch' && inputs.integration))
     runs-on: [self-hosted, matlab, imas]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - name: Integration tests
-        uses: matlab-actions/run-build@v2
-        with:
-          tasks: integration
+      - name: Acceptance (vaft.doctor + integration tests)
+        # VAFT_IMAS_PREFIX may be set in the runner's .env; otherwise the
+        # default prefix of install_imas_matlab.sh is used.
+        run: bash install/install_imas_matlab.sh ${VAFT_IMAS_PREFIX:+--prefix "$VAFT_IMAS_PREFIX"} --check-only
 
       - name: Upload test results
         if: always()

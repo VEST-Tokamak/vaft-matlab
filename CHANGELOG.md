@@ -8,6 +8,16 @@ Before 1.0.0, minor versions may change the public API.
 
 ## [Unreleased]
 
+### Added
+
+- `install/install_imas_matlab.sh`, which builds IMAS-MATLAB, IMAS-Core and the Data Dictionary from your own source trees on Linux and Apple silicon macOS, applies the macOS patches to staged copies, verifies the install with `vaft.doctor` and the integration tests, and records a manifest.
+- `install/start_matlab.sh`, which starts MATLAB with IMAS-MATLAB and vaft-matlab on the path.
+- macOS patches for IMAS-MATLAB (`install/imas-matlab/macos.patch`) and IMAS-Core (`install/imas-core/macos.patch`), both LGPL-3.0.
+
+### Changed
+
+- The integration CI job runs on a self-hosted runner, on manual dispatch only, and never for pull requests.
+
 ## [0.1.0] - 2026-10-25
 
 ### Added

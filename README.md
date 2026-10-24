@@ -35,8 +35,9 @@ entry.close();
 
 3. Run `vaft.doctor` to check the result.
 
-[docs/installation.md](docs/installation.md) has platform notes, including
-macOS. [docs/compatibility.md](docs/compatibility.md) lists the tested
+[docs/installation.md](docs/installation.md) has platform notes.
+[install/](install/README.md) can build IMAS-MATLAB for you on Linux and
+Apple silicon macOS. [docs/compatibility.md](docs/compatibility.md) lists the tested
 versions.
 
 ## Implemented

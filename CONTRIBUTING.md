@@ -39,12 +39,22 @@ layer, so please read [docs/architecture.md](docs/architecture.md) first.
 ## CI
 
 - **unit**: GitHub-hosted Ubuntu with MATLAB R2024b. Runs `buildtool check test`.
-- **integration**: runs only on a self-hosted runner labelled
-  `self-hosted, matlab, imas` that has MATLAB and IMAS-MATLAB installed.
-  It's enabled by setting the repository variable `IMAS_RUNNER=true`, or
-  run manually with *Run workflow*. The runner must have a MATLAB license,
-  and `al_env.sh` must be sourced in its environment (for example in the
-  runner's `.env` file or service definition).
+- **integration**: runs on a self-hosted runner labelled
+  `self-hosted, matlab, imas` that has a licensed MATLAB and an IMAS-MATLAB
+  install made by `install/install_imas_matlab.sh`. It runs
+  `install_imas_matlab.sh --check-only`, which runs `vaft.doctor` and
+  `buildtool integration`.
+  - It never runs for pull requests. Fork PR workflows also need
+    maintainer approval for every outside contributor.
+  - By default it runs only when started by hand: *Actions → MATLAB CI →
+    Run workflow*, while the runner is online. To run it on every push to
+    `main`, keep a runner online permanently and set the repository
+    variable `IMAS_RUNNER=true`.
+  - Setting up a runner: download the runner from *Settings → Actions →
+    Runners → New self-hosted runner* and register it with
+    `--labels matlab,imas`. Put `VAFT_IMAS_PREFIX=<prefix>` in the
+    runner's `.env` if you didn't use the default prefix. Start it with
+    `./run.sh` only while you want it to take jobs.
 
 ## Versioning and changelog
 

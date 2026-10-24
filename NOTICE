@@ -11,8 +11,13 @@ separately distributed software:
                  GNU Lesser General Public License v3.0 (LGPL-3.0)
   IMAS-Core    - https://github.com/iterorganization/IMAS-Core
                  Copyright ITER Organization
+                 GNU Lesser General Public License v3.0 (LGPL-3.0)
   IMAS Data Dictionary - https://github.com/iterorganization/IMAS-Data-Dictionary
                  Copyright ITER Organization
 
 Users install these components themselves and must follow their license
 terms.
+
+Exception: install/imas-matlab/macos.patch and install/imas-core/macos.patch
+are modifications of IMAS-MATLAB and IMAS-Core. They are distributed under
+LGPL-3.0, not Apache-2.0. See the header of each file.

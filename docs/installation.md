@@ -1,6 +1,6 @@
 # Installation
 
-vaft-matlab is a plain folder that you add to the MATLAB path. Install
+vaft-matlab is a plain folder that you add to the MATLAB path. You install
 IMAS-MATLAB separately: this repository doesn't bundle it, and
 `vaft.doctor` never installs it.
 
@@ -14,56 +14,45 @@ IMAS-MATLAB separately: this repository doesn't bundle it, and
 | IMAS Data Dictionary | yes | built with IMAS-MATLAB |
 | Python, Python VAFT | no | only for future interoperability |
 
-## 1. Install IMAS-MATLAB
+## 1. Get IMAS-MATLAB
 
-Follow the upstream guide,
-[Building and installing IMAS-MATLAB](https://imas-matlab.readthedocs.io/en/latest/building_installing.html).
-In short, on Linux:
+Pick one of these options:
+
+**A. Your site already has it.** Load it, for example with
+`module load IMAS-MATLAB` or `source <install_dir>/bin/al_env.sh`, then
+start MATLAB.
+
+**B. Build it with vaft-matlab's installer.** This works on Linux and Apple
+silicon macOS:
 
 ```bash
 git clone https://github.com/iterorganization/IMAS-MATLAB.git
-cd IMAS-MATLAB
-cmake -B build -D CMAKE_INSTALL_PREFIX=$HOME/al-install --preset=https
-make -C build -j8 all install
+git clone https://github.com/iterorganization/IMAS-Core.git
+git clone https://github.com/iterorganization/IMAS-Data-Dictionary.git
+git clone https://github.com/VEST-Tokamak/vaft-matlab.git
+
+bash vaft-matlab/install/install_imas_matlab.sh --source IMAS-MATLAB
+bash vaft-matlab/install/start_matlab.sh        # MATLAB with IMAS + vaft on the path
 ```
 
-On clusters with environment modules, IMAS may already be installed. In
-that case, use for example `module load IMAS-MATLAB`.
+The installer builds your committed revisions in a separate work folder.
+On macOS it applies a small patch, kept in this repository, to that copy.
+It then installs into `~/.local/vaft-matlab/imas` and runs the integration
+tests. See [install/README.md](../install/README.md) for prerequisites,
+options and what the patch changes.
 
-### Make it available to MATLAB
+**C. Build it with upstream's instructions** (Linux), following
+[Building and installing IMAS-MATLAB](https://imas-matlab.readthedocs.io/en/latest/building_installing.html).
+Then run `source <install_dir>/bin/al_env.sh` before starting MATLAB.
 
-Source the environment script before starting MATLAB:
+### Notes
 
-```bash
-source $HOME/al-install/bin/al_env.sh
-matlab
-```
-
-This sets `MATLABPATH`, the library path, `IDSDEF_PATH` and
-`IMAS_VERSION`. If you'd rather not use the script, add the compiled
-toolbox folder (the one that contains `ids_get.mex*`) inside MATLAB with
-`addpath`. Don't add the IMAS-MATLAB *source* folder `matlab/`: its `.m`
-files hold only help text, and `vaft.doctor` reports them as a failure.
-
-With the HDF5 backend, also set `HDF5_USE_FILE_LOCKING=FALSE` on shared
-filesystems. You may also need `LD_PRELOAD=<hdf5>/lib/libhdf5_hl.so` when
-starting MATLAB (see the upstream docs).
-
-### macOS (Apple Silicon)
-
-macOS isn't an officially supported IMAS-MATLAB platform. It can be built
-locally with the HDF5 backend only (MDSplus and UDA are disabled on macOS),
-using Homebrew `boost`, `hdf5`, `cmake` and `pkgconf`. Then start MATLAB
-through the helper script that comes with IMAS-MATLAB:
-
-```bash
-MATLAB_BIN=/Applications/MATLAB_R2026b.app/bin/matlab \
-  /path/to/IMAS-MATLAB/examples/start_matlab_mac.sh /path/to/install-mac
-```
-
-It sets `MATLABPATH=<install>/toolbox`, `IDSDEF_PATH`, `IMAS_VERSION` and
-`HDF5_USE_FILE_LOCKING=FALSE`. Use `-batch "..."` after the install path
-for non-interactive runs.
+- If you add folders yourself, add the compiled toolbox folder (the one
+  containing `ids_get.mex*`). Don't add the IMAS-MATLAB *source* folder
+  `matlab/`: its `.m` files hold only help text, and `vaft.doctor` reports
+  them as a failure.
+- With the HDF5 backend, set `HDF5_USE_FILE_LOCKING=FALSE` on shared
+  filesystems. `start_matlab.sh` does this for you.
 
 ## 2. Install vaft-matlab
 
@@ -77,6 +66,7 @@ savepath        % optional: keep it for future sessions
 ```
 
 Add only the repository root. MATLAB finds `+vaft` from there.
+`install/start_matlab.sh` adds the root for you.
 
 ## 3. Check
 
@@ -90,4 +80,10 @@ Every line should be `[OK]` or `[INFO]`. Each `[FAIL]` line includes a hint.
 
 ```matlab
 rmpath("/path/to/vaft-matlab"); savepath
+```
+
+To remove an IMAS-MATLAB install made by the installer:
+
+```bash
+bash install/install_imas_matlab.sh --uninstall
 ```

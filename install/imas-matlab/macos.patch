@@ -1,0 +1,154 @@
+vaft-matlab: macOS (Apple silicon) build fixes for IMAS-MATLAB
+==============================================================
+
+Applied by install/install_imas_matlab.sh to a *copy* of the IMAS-MATLAB
+tree on macOS only. Linux builds use upstream unchanged.
+
+What it changes (CMakeLists.txt, ids_validate.xsl):
+  * build al-mex as a shared C library on macOS, as upstream already does on
+    Windows, and stop CMake's FindMatlab from adding C++ MEX export maps
+    (Matlab_HAS_CPP_API FALSE) that the C MEX runtime cannot resolve;
+  * compile every MEX target with MATLAB_DEFAULT_RELEASE=R2017b, the
+    separate-complex API IMAS-MATLAB is written against;
+  * set @loader_path / ../lib / MATLAB bin rpaths so MEX files find libal
+    and libal-mex without DYLD_LIBRARY_PATH (stripped by macOS SIP);
+  * use -Wl,--as-needed only on Linux (Apple ld rejects it);
+  * replace `uint` (glibc-only typedef) with `unsigned int`.
+
+The installed bin/al_env.sh comes from IMAS-Core; see
+install/imas-core/macos.patch.
+
+Tested on IMAS-MATLAB f8208f6 (5.5.0-63) and applies to develop 40c61b2.
+
+License: this file is a modification of IMAS-MATLAB and is distributed
+under the GNU Lesser General Public License v3.0, like IMAS-MATLAB itself
+(https://github.com/iterorganization/IMAS-MATLAB/blob/develop/LICENSE.txt).
+It is not covered by vaft-matlab's Apache-2.0 license.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 699790a..e41dcd8 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -122,6 +129,13 @@ if(WIN32)
+ else()
+  find_package( Matlab REQUIRED )
+ endif()
++
++if( APPLE )
++  # IMAS-MATLAB builds classic C MEX files. For recent MATLAB releases on macOS,
++  # CMake's FindMatlab may otherwise inject C++ MEX export maps and unresolved
++  # adapter symbols that are not provided by the C MEX runtime.
++  set( Matlab_HAS_CPP_API FALSE )
++endif()
+ # Utility sources and target
+ ################################################################################
+ 
+@@ -132,7 +146,7 @@ set( MEX_UTIL_SOURCES
+   src/imas_mex_structs.c
+   src/imas_mex_utils.c
+ )
+-if(WIN32)
++if(WIN32 OR APPLE)
+   # This should be built as a shared library (not a MEX file) with name libal-mex.so/.dll
+   # It's a utility library that MEX files link to, so use add_library instead of matlab_add_mex
+   add_library( al-mex SHARED ${MEX_UTIL_SOURCES} )
+@@ -141,15 +155,17 @@ if(WIN32)
+   target_include_directories( al-mex PUBLIC ${Matlab_INCLUDE_DIRS} )
+ 
+   # Use separate (non-interleaved) complex API for compatibility
+-  target_compile_definitions( al-mex PUBLIC)
++  target_compile_definitions( al-mex PUBLIC MATLAB_DEFAULT_RELEASE=R2017b )
+ 
+   # Define AL_MEX_BUILDING_DLL when building the al-mex library
+   target_compile_definitions( al-mex PRIVATE AL_MEX_BUILDING_DLL )
+ 
+   # Compile as C (al-core exports C symbols via extern "C")
+   set_source_files_properties(${MEX_UTIL_SOURCES} PROPERTIES LANGUAGE C)
+-  # Force C compilation on Windows
+-  target_compile_options(al-mex PRIVATE /TC)
++  if(WIN32)
++    # Force C compilation on Windows
++    target_compile_options(al-mex PRIVATE /TC)
++  endif()
+   # Link as C library (al exports C symbols)
+   set_target_properties(al-mex PROPERTIES LINKER_LANGUAGE C)
+ else()
+@@ -170,7 +186,24 @@ if(WIN32)
+ else()
+   set_target_properties( al-mex PROPERTIES
+     SUFFIX ".so"
+-    LINK_FLAGS " -Wl,--as-needed"
++  )
++  if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
++    set_target_properties( al-mex PROPERTIES
++      LINK_FLAGS " -Wl,--as-needed"
++    )
++  endif()
++endif()
++
++if( APPLE )
++  set( AL_MATLAB_BUILD_RPATH
++    "@loader_path;@loader_path/_deps/al-core-build;${Matlab_ROOT_DIR}/bin/maca64"
++  )
++  set( AL_MATLAB_INSTALL_RPATH
++    "@loader_path;@loader_path/../lib;${Matlab_ROOT_DIR}/bin/maca64"
++  )
++  set_target_properties( al-mex PROPERTIES
++    BUILD_RPATH "${AL_MATLAB_BUILD_RPATH}"
++    INSTALL_RPATH "${AL_MATLAB_INSTALL_RPATH}"
+   )
+ endif()
+ set( MEX_TARGETS )
+@@ -241,7 +274,7 @@ if(WIN32)
+     endif()
+     target_include_directories( "mex-${NAME}" PRIVATE src )
+     # Use separate (non-interleaved) complex API for compatibility
+-    target_compile_definitions( "mex-${NAME}" PUBLIC)
++    target_compile_definitions( "mex-${NAME}" PUBLIC MATLAB_DEFAULT_RELEASE=R2017b )
+     # Add /bigobj flag for large generated code files
+     target_compile_options( "mex-${NAME}" PRIVATE /bigobj )
+     # Ensure all source-generation targets finish before this MEX target compiles.
+@@ -255,6 +288,7 @@ else()
+   macro( ADD_IMAS_MEX NAME SOURCES )
+     matlab_add_mex( NAME "mex-${NAME}" SRC ${SOURCES} LINK_TO al al-mex OUTPUT_NAME "${NAME}" )
+     target_include_directories( "mex-${NAME}" PRIVATE src )
++    target_compile_definitions( "mex-${NAME}" PUBLIC MATLAB_DEFAULT_RELEASE=R2017b )
+     # Ensure all source-generation targets finish before this MEX target compiles.
+     # Without this, parallel builds (cmake --build -j N) can race: the MEX target
+     # tries to compile BYPRODUCT files before al-mex-source-* has generated them.
+@@ -332,6 +366,15 @@ foreach( TARGET ${TARGETS} )
+   ADD_IMAS_MEX( ${TARGET} "src/${TARGET}.c" )
+ endforeach()
+ 
++if( APPLE )
++  foreach( MEX_TARGET ${MEX_TARGETS} )
++    set_target_properties( ${MEX_TARGET} PROPERTIES
++      BUILD_RPATH "${AL_MATLAB_BUILD_RPATH}"
++      INSTALL_RPATH "${AL_MATLAB_INSTALL_RPATH}"
++    )
++  endforeach()
++endif()
++
+ add_custom_target( al-matlab )
+ add_dependencies( al-matlab al-mex-sources al-mex ${MEX_TARGETS} )
+ 
+diff --git a/ids_validate.xsl b/ids_validate.xsl
+index 3703c24..bb63540 100644
+--- a/ids_validate.xsl
++++ b/ids_validate.xsl
+@@ -135,13 +135,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
+     // a hardcoded strok_r. same function but by moving the save pointer
+     char *my_strtok_r (char *srcString, char delim, char **save_ptr)
+     {
+-      #ifdef _WIN32
+-        unsigned int openpar  = 0;
+-        unsigned int closepar = 0;
+-      #else
+-        uint openpar  = 0;
+-        uint closepar = 0;
+-      #endif
++      unsigned int openpar  = 0;
++      unsigned int closepar = 0;
+       if(!srcString)
+       {
+           srcString = *save_ptr;

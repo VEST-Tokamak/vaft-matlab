@@ -7,13 +7,17 @@ configuration not listed here may work, but it hasn't been checked.
 
 | Date | Platform | MATLAB | IMAS-MATLAB (HLI) | IMAS-Core (AL) | Data Dictionary | Backend | Result |
 |---|---|---|---|---|---|---|---|
-| 2026-10-25 | macOS, arm64 | R2026b | 5.5.0+63-gf8208f6 (local macOS patches) | 5.6.0.1 | 4.1.1-15-gcc8fd4f | HDF5 | unit + integration pass |
-| CI | Ubuntu (GitHub-hosted) | R2024b | not installed | – | – | – | unit tests only |
+| 2026-10-25 | macOS, arm64 | R2026b | 5.5.0+63-gf8208f6 + `install/` macOS patches | 5.6.0.1 | 4.1.1-15-gcc8fd4f | HDF5 | unit + integration pass |
+| CI | Ubuntu (GitHub-hosted) | R2024b, latest | not installed | – | – | – | unit tests only |
+| CI | macOS arm64 (self-hosted) | R2026b | built by `install/install_imas_matlab.sh` | 5.6.0.1 | 4.1.1-15-gcc8fd4f | HDF5 | integration (manual dispatch) |
 
 Notes:
 
-- The macOS row uses an IMAS-MATLAB build compiled against MATLAB R2025b
-  that also loads in R2026b. macOS isn't an upstream-supported platform.
+- macOS isn't an upstream-supported IMAS-MATLAB platform. macOS builds use
+  `install/install_imas_matlab.sh`, which applies the patches in
+  `install/imas-matlab/` and `install/imas-core/`, so the reported
+  `hli_version` ends in `-dirty`. A build made against MATLAB R2025b was
+  also confirmed to load in R2026b.
 - The version strings above are the `imas_versions()` output
   (`hli_version`, `al_version`, `dd_version`).
 
