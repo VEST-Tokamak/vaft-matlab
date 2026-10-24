@@ -1,0 +1,22 @@
+# MATLAB
+*.asv
+*.m~
+*.mex*
+slprj/
+codegen/
+*.mlappinstall
+*.mltbx
+resources/project/
+
+# Build and test outputs
+/results/
+/.buildtool/
+
+# Local IMAS data
+test_db/
+*.h5
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,18 @@
+vaft-matlab
+Copyright 2026 VEST-Tokamak contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+vaft-matlab calls, but does not include or redistribute, the following
+separately distributed software:
+
+  IMAS-MATLAB  - https://github.com/iterorganization/IMAS-MATLAB
+                 Copyright ITER Organization and EPFL
+                 GNU Lesser General Public License v3.0 (LGPL-3.0)
+  IMAS-Core    - https://github.com/iterorganization/IMAS-Core
+                 Copyright ITER Organization
+  IMAS Data Dictionary - https://github.com/iterorganization/IMAS-Data-Dictionary
+                 Copyright ITER Organization
+
+Users install these components themselves and must follow their license
+terms.

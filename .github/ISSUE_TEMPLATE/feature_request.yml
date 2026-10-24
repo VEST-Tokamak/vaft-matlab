@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose new functionality for vaft-matlab
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Research need
+      description: What do you want to do in MATLAB, and what stops you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: How would you like to call it? A short MATLAB snippet helps.
+      render: matlab
+  - type: dropdown
+    id: source
+    attributes:
+      label: Where does the capability exist today?
+      description: vaft-matlab reuses IMAS-MATLAB and Python VAFT instead of reimplementing them.
+      options:
+        - IMAS-MATLAB (needs a MATLAB-native wrapper)
+        - Python VAFT (needs a bridge)
+        - Nowhere yet
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: related
+    attributes:
+      label: Related issues
+      description: e.g. VEST-Tokamak/vaft#1127 (DD abstractions), #1208 (plotting)

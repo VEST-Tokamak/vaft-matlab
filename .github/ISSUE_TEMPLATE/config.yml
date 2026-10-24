@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: IMAS-MATLAB issues
+    url: https://github.com/iterorganization/IMAS-MATLAB/issues
+    about: Problems in IMAS-MATLAB itself (building, MEX, IDS I/O) belong upstream.
+  - name: Python VAFT
+    url: https://github.com/VEST-Tokamak/vaft/issues
+    about: Scientific algorithms and the Python framework.
